@@ -33,6 +33,7 @@ def call_llamacpp(prompt: str, config: dict) -> str:
     api_url = config.get('llamacpp_api_url', 'http://localhost:8080/completion')
     temperature = config.get('llamacpp_temperature', 0.7)
     n_predict = config.get('llamacpp_n_predict', 1024)
+    timeout = config.get('llamacpp_timeout', 600)
 
     logging.info(f"Calling llama.cpp API at {api_url}")
 
@@ -58,7 +59,7 @@ def call_llamacpp(prompt: str, config: dict) -> str:
                 method='POST'
             )
 
-            with urllib.request.urlopen(req, timeout=30) as response:
+            with urllib.request.urlopen(req, timeout=timeout) as response:
                 result = json.loads(response.read().decode('utf-8'))
                 message_content = result.get('content', '')
 

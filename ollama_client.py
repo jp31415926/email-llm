@@ -33,6 +33,7 @@ def call_ollama(prompt: str, config: dict) -> str:
     api_url = config.get('ollama_api_url', '')
     model = config.get('ollama_model', '')
     temperature = config.get('ollama_temperature', 0.7)
+    timeout = config.get('ollama_timeout', 600)
 
     logging.info(f"Calling Ollama API at {api_url}")
 
@@ -67,7 +68,7 @@ def call_ollama(prompt: str, config: dict) -> str:
                 method='POST'
             )
 
-            with urllib.request.urlopen(req, timeout=30) as response:
+            with urllib.request.urlopen(req, timeout=timeout) as response:
                 # Parse response
                 result = json.loads(response.read().decode('utf-8'))
                 #message_content = result.get('message', {}).get('content', '')

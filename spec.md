@@ -77,10 +77,12 @@ All configuration will be managed in a file named `config.py` that contains a si
 | `ollama_top_k` | `int` | No | 40 | Top-k sampling for Ollama. |
 | `ollama_top_p` | `float` | No | 0.9 | Top-p sampling for Ollama. |
 | `ollama_min_p` | `float` | No | 0.0 | Min-p sampling for Ollama. |
+| `ollama_timeout` | `int` | No | 600 | HTTP request timeout in seconds for Ollama. |
 | `ollama_prefix_prompt` | `str` | No | `You are a helpful email assistant.` | Text prepended to every prompt when using Ollama. |
 | `llamacpp_api_url` | `str` | Yes | `http://localhost:8080/completion` | The full URL for the llama.cpp server API endpoint. |
 | `llamacpp_temperature` | `float` | No | 0.7 | Sampling temperature for llama.cpp. |
 | `llamacpp_n_predict` | `int` | No | 1024 | Max tokens to generate for llama.cpp. |
+| `llamacpp_timeout` | `int` | No | 600 | HTTP request timeout in seconds for llama.cpp. |
 | `llamacpp_prefix_prompt` | `str` | No | `You are a helpful email assistant.` | Text prepended to every prompt when using llama.cpp. |
 | `allowed_attachment_extensions`| `list` | Yes | `['.txt', '.md', '.eml']` | A list of strings for allowed file extensions. |
 | `smtp_host` | `str` | Yes | `smtp.example.com` | The SMTP server hostname or IP address. |

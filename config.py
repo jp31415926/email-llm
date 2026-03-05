@@ -33,12 +33,14 @@ config = {
     'ollama_model': 'llama3',
     'ollama_temperature': 0.7,
     'ollama_prefix_prompt': 'You are a helpful email assistant.',
+    'ollama_timeout': 600,
 
     # llama.cpp server settings
     'llamacpp_api_url': 'http://localhost:8080/completion',
     'llamacpp_temperature': 0.7,
     'llamacpp_prefix_prompt': 'You are a helpful email assistant.',
     'llamacpp_n_predict': 1024,
+    'llamacpp_timeout': 600,
 
     'allowed_attachment_extensions': ['.txt', '.md', '.eml'],
     'smtp_host': 'smtp.example.com',
