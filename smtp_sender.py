@@ -93,8 +93,6 @@ def compose_reply_msg(original_headers: dict, reply_text: str, config: dict) -> 
 
 Assistant:
 {reply_text}
-
-[Place any reply down here at the bottom.]
 """
 
     # Create the multipart message
