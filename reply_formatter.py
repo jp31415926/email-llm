@@ -53,30 +53,6 @@ def _strip_quotes(lines: list[str]) -> list[str]:
     return [re.sub(r'^(>\s?)+', '', line) for line in lines]
 
 
-def _reflow(lines: list[str]) -> list[str]:
-    """Join consecutive non-blank lines into single long lines.
-
-    Blank lines are preserved as paragraph separators. Consecutive
-    non-blank lines within a paragraph are joined with a space.
-    """
-    result: list[str] = []
-    current_para: list[str] = []
-
-    for line in lines:
-        if line.strip() == '':
-            if current_para:
-                result.append(' '.join(current_para))
-                current_para = []
-            result.append('')
-        else:
-            current_para.append(line.strip())
-
-    if current_para:
-        result.append(' '.join(current_para))
-
-    return result
-
-
 def reformat_reply_body(body: str) -> str:
     """Reformat an email reply body into chronological chat format.
 
@@ -98,9 +74,8 @@ def reformat_reply_body(body: str) -> str:
     user_reply_lines = lines[:sep_start]
     quoted_lines = lines[sep_end:]
 
-    # Strip quote characters then reflow the quoted section
+    # Strip quote characters from the quoted section
     quoted_lines = _strip_quotes(quoted_lines)
-    quoted_lines = _reflow(quoted_lines)
 
     user_reply = '\n'.join(user_reply_lines).strip()
     quoted_body = '\n'.join(quoted_lines).strip()

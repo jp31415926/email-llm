@@ -87,8 +87,8 @@ class TestReformatReplyBody:
         assert "Second paragraph." in result
         assert "\n\n" in result
 
-    def test_reflowing_joins_wrapped_lines(self):
-        """Consecutive non-blank quoted lines are joined into one long line."""
+    def test_wrapped_lines_preserved(self):
+        """Wrapped lines in quoted section are kept as-is (no reflowing)."""
         body = (
             "Reply.\n"
             "\n"
@@ -98,29 +98,8 @@ class TestReformatReplyBody:
             "> wrapped by the email client.\n"
         )
         result = reformat_reply_body(body)
-        # The two wrapped lines should be joined
-        assert "This is a long sentence that was wrapped by the email client." in result
-
-    def test_reflowing_preserves_paragraph_break(self):
-        """Paragraph break (blank line) in quoted section is not collapsed."""
-        body = (
-            "Reply.\n"
-            "\n"
-            "On Wed, Mar 4, 2026, 15:45 <bot@example.com> wrote:\n"
-            "\n"
-            "> Para one line one.\n"
-            "> Para one line two.\n"
-            ">\n"
-            "> Para two.\n"
-        )
-        result = reformat_reply_body(body)
-        assert "Para one line one. Para one line two." in result
-        assert "Para two." in result
-        # Blank line separates the two paragraphs
-        idx_para1 = result.index("Para one line one.")
-        idx_blank = result.index("\n\n", idx_para1)
-        idx_para2 = result.index("Para two.", idx_blank)
-        assert idx_para1 < idx_blank < idx_para2
+        # Lines should remain separate, not joined
+        assert "This is a long sentence that was\nwrapped by the email client." in result
 
     def test_no_reply_text_above_separator(self):
         """If there is no text before the separator, returns just the quoted content."""

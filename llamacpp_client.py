@@ -65,8 +65,12 @@ def call_llamacpp(prompt: str, config: dict) -> str:
                 result = json.loads(response.read().decode('utf-8'))
                 message_content = result.get('content', '')
 
-            # Strip <think>...</think> blocks produced by reasoning models
-            message_content = re.sub(r'<think>.*?</think>', '', message_content, flags=re.DOTALL).strip()
+            # Strip thinking output from reasoning models. Handle two cases:
+            # 1. Full <think>...</think> block (server leaves both tags)
+            # 2. Only </think> present (server stripped the opening tag)
+            message_content = re.sub(r'<think>.*?</think>', '', message_content, flags=re.DOTALL)
+            message_content = re.sub(r'^.*?</think>\s*', '', message_content, flags=re.DOTALL)
+            message_content = message_content.strip()
 
             logging.info("llama.cpp API call succeeded")
             logging.debug(f"message_content={message_content}")
