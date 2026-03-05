@@ -117,12 +117,10 @@ class TestComposeReplyMsg:
         text_part = payload[0] if payload else None
         body_str = text_part.get_payload(decode=True).decode('utf-8') if text_part else ''
 
-        # Check that AI reply is present
+        # Check that chat history and AI reply are present
+        assert 'Original body content' in body_str
         assert 'Assistant:' in body_str
         assert 'Hello! I can help.' in body_str
-
-        # Check that original is quoted
-        assert 'User:' in body_str
 
     def test_date_fallback(self):
         """Test that missing Date header falls back to current time."""

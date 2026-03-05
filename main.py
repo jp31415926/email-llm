@@ -19,6 +19,8 @@ from email_parser import parse_email
 from attachment_validator import raise_if_unsupported, read_allowed_attachments, UnsupportedAttachmentError
 from ollama_prompt import compose_ollama_prompt
 from ollama_client import call_ollama, OllamaError
+from llamacpp_client import call_llamacpp, LlamaCppError
+from reply_formatter import reformat_reply_body
 from smtp_sender import compose_reply_msg, send_email, send_unsupported_attachment_notice, send_api_failure_notice
 
 # Configure logging
@@ -59,14 +61,23 @@ def process_email(email_path: Path, config: dict) -> dict:
     # Raise if any unsupported attachments
     raise_if_unsupported(email_obj, allowed_exts)
 
+    # Reformat reply chains into chronological chat order
+    body: str = headers.get('body', '')  # type: ignore
+    body = reformat_reply_body(body)
+    headers['body'] = body  # keep in sync so compose_reply_msg sees the same text
+
     # Compose prompt
     logger.info("Composing prompt...")
-    body: str = headers.get('body', '')  # type: ignore
     prompt = compose_ollama_prompt(config, attachments, body)
 
-    # Call Ollama
-    logger.info("Calling Ollama...")
-    reply_text = call_ollama(prompt, config)
+    # Call LLM backend
+    backend = config.get('llm_backend', 'ollama')
+    if backend == 'llamacpp':
+        logger.info("Calling llama.cpp API...")
+        reply_text = call_llamacpp(prompt, config)
+    else:
+        logger.info("Calling Ollama...")
+        reply_text = call_ollama(prompt, config)
 
     # Compose reply message
     logger.info("Composing reply...")
@@ -147,8 +158,8 @@ def main() -> None:
                     dest_path = processed_folder / email_path.name
                     email_path.rename(dest_path)
                     logger.info(f"Archived {email_path.name} → {dest_path}")
-                except OllamaError as e:
-                    logger.error(f"Ollama API error: {e}")
+                except (OllamaError, LlamaCppError) as e:
+                    logger.error(f"LLM API error: {e}")
                     # Re-parse the email to get headers
                     headers = parse_email(email_path)
                     allowed_exts = config.get('allowed_attachment_extensions', [])

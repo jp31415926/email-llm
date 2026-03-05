@@ -18,7 +18,9 @@ def compose_ollama_prompt(config: dict, attachments: List[Tuple[str, str]], body
     prompt_parts: List[str] = []
 
     # Add prefix prompt if non-empty
-    prefix_prompt = config.get('ollama_prefix_prompt', '')
+    backend = config.get('llm_backend', 'ollama')
+    prefix_key = 'llamacpp_prefix_prompt' if backend == 'llamacpp' else 'ollama_prefix_prompt'
+    prefix_prompt = config.get(prefix_key, '')
     if prefix_prompt:
         prompt_parts.append(prefix_prompt)
 

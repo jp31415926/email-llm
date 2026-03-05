@@ -89,8 +89,7 @@ def compose_reply_msg(original_headers: dict, reply_text: str, config: dict) -> 
         else:
             from_header = addr
 
-    body = f"""User:
-{original_body}
+    body = f"""{original_body}
 
 Assistant:
 {reply_text}
