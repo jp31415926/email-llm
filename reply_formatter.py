@@ -81,5 +81,5 @@ def reformat_reply_body(body: str) -> str:
     quoted_body = '\n'.join(quoted_lines).strip()
 
     if user_reply:
-        return f"{quoted_body}\n\n{user_reply}"
+        return f"{quoted_body}\n\nUser:\n{user_reply}"
     return quoted_body

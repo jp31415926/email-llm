@@ -24,7 +24,7 @@ class TestReformatReplyBody:
             "> Previous bot message.\n"
         )
         result = reformat_reply_body(body)
-        assert result.index("Previous bot message.") < result.index("This is my new reply.")
+        assert result.index("Previous bot message.") < result.index("User:\nThis is my new reply.")
 
     def test_separator_line_removed(self):
         """The 'On ... wrote:' line itself is not present in output."""
@@ -67,7 +67,7 @@ class TestReformatReplyBody:
         result = reformat_reply_body(body)
         assert "Quoted text." in result
         assert "User reply." in result
-        assert result.index("Quoted text.") < result.index("User reply.")
+        assert result.index("Quoted text.") < result.index("User:\nUser reply.")
         assert "wrote:" not in result
 
     def test_blank_lines_preserved(self):

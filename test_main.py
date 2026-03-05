@@ -188,7 +188,7 @@ On Wed, 15 May 2024, 09:00 <bot@example.com> wrote:
 
         reformatted = headers['body']
         # Quoted content should come first, user reply at the end
-        assert reformatted.index('Previous bot message.') < reformatted.index("User's new reply here.")
+        assert reformatted.index('Previous bot message.') < reformatted.index("User:\nUser's new reply here.")
         # No '>' characters should remain
         assert '>' not in reformatted
 
