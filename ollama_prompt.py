@@ -30,7 +30,7 @@ def compose_ollama_prompt(config: dict, attachments: List[Tuple[str, str]], body
 
     # Add email body if non-empty
     if body:
-        prompt_parts.append(f'<email_body>{body}</email_body>')
+        prompt_parts.append(body)
 
     # Join all parts with double newlines for separation
     return '\n\n'.join(prompt_parts)

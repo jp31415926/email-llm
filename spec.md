@@ -21,8 +21,8 @@ The script operates in a continuous, single-threaded polling loop.
 6.  **Construct API Prompt:** It constructs a single text prompt for the LLM API in the following order and format:
     1.  The content of `ollama_prefix_prompt` or `llamacpp_prefix_prompt` from the configuration (depending on the active backend).
     2.  The text content of each allowed attachment, wrapped in XML-style tags: `<attachment filename="[original_filename]">[attachment_text_content]</attachment>`.
-    3.  The (possibly reformatted) email body, wrapped in an XML-style tag: `<email_body>[email_body_content]</email_body>`.
-    *   If the email body is empty but attachments are present, the `<email_body>` tag should be omitted.
+    3.  The (possibly reformatted) email body, appended as plain text.
+    *   If the email body is empty, it is omitted.
 7.  **Interact with LLM API:** It sends the complete prompt to the configured LLM backend (`ollama` or `llamacpp`), selected via the `llm_backend` config key.
 8.  **Compose Reply:**
     *   **Subject:** The reply subject line MUST be prefixed with `Re: `, unless the original subject already starts with `Re: `.

@@ -25,7 +25,7 @@ class TestComposeOllamaPrompt:
         result = compose_ollama_prompt(config, attachments, body)
 
         assert 'You are a helpful email assistant.' in result
-        assert '<email_body>Hello, I need help with my order.</email_body>' in result
+        assert 'Hello, I need help with my order.' in result
 
     def test_with_attachments_only(self) -> None:
         """Test prompt with attachments but no body omits email_body tag."""
@@ -87,7 +87,7 @@ class TestComposeOllamaPrompt:
 
         result = compose_ollama_prompt(config, attachments, body)
 
-        assert '<email_body>Line 1\nLine 2\nLine 3</email_body>' in result
+        assert 'Line 1\nLine 2\nLine 3' in result
 
     def test_prefix_only_no_attachments_no_body(self) -> None:
         """Test with prefix only, no attachments, no body."""
@@ -114,7 +114,7 @@ class TestComposeOllamaPrompt:
         result = compose_ollama_prompt(config, attachments, body)
 
         assert '<attachment filename="data.txt">Data content</attachment>' in result
-        assert '<email_body>Email content here</email_body>' in result
+        assert 'Email content here' in result
 
     def test_attachment_with_special_chars_in_content(self) -> None:
         """Test that special characters in attachment content are preserved."""

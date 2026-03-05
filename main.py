@@ -9,6 +9,7 @@ Wires all modules together in a polling loop that:
 """
 
 import logging
+import re
 import signal
 import sys
 import time
@@ -78,6 +79,9 @@ def process_email(email_path: Path, config: dict) -> dict:
     else:
         logger.info("Calling Ollama...")
         reply_text = call_ollama(prompt, config)
+
+    # Strip any prompt XML tags the LLM may have echoed in its response
+    reply_text = re.sub(r'</?(attachment\b[^>]*)>', '', reply_text).strip()
 
     # Compose reply message
     logger.info("Composing reply...")
