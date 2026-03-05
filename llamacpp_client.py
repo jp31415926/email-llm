@@ -4,6 +4,7 @@
 import json
 import logging
 import random
+import re
 import time
 import urllib.error
 import urllib.request
@@ -48,6 +49,7 @@ def call_llamacpp(prompt: str, config: dict) -> str:
                 'top_p': 0.9,
                 'min_p': 0.0,
                 'stream': False,
+                'include_thinking': False,
             }
 
             json_data = json.dumps(payload).encode('utf-8')
@@ -62,6 +64,9 @@ def call_llamacpp(prompt: str, config: dict) -> str:
             with urllib.request.urlopen(req, timeout=timeout) as response:
                 result = json.loads(response.read().decode('utf-8'))
                 message_content = result.get('content', '')
+
+            # Strip <think>...</think> blocks produced by reasoning models
+            message_content = re.sub(r'<think>.*?</think>', '', message_content, flags=re.DOTALL).strip()
 
             logging.info("llama.cpp API call succeeded")
             logging.debug(f"message_content={message_content}")
