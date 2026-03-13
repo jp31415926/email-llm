@@ -64,6 +64,42 @@ class TestGetHistoryPaths:
         # compact file name should be history name with -compact inserted before .txt
         assert c.name == h.name.replace('.txt', '-compact.txt')
 
+    def test_reply_with_re_prefix_finds_existing_file(self, tmp_path):
+        """A reply whose subject starts with 'Re: ' must reuse the original history file."""
+        config = {'history_folder': str(tmp_path)}
+        # Original message: the root ID is its own message_id
+        original_headers = {'subject': 'Hello World', 'message_id': '<abc@ex.com>'}
+        h_orig, _ = get_history_paths(original_headers, config)
+        # Simulate an existing history file for this thread
+        h_orig.parent.mkdir(parents=True, exist_ok=True)
+        h_orig.write_text('User:\nhello\n\nAssistant:\nhi')
+
+        # Reply: subject has 'Re: ' prefix, In-Reply-To points to original
+        reply_headers = {
+            'subject': 'Re: Hello World',
+            'message_id': '<def@ex.com>',
+            'in_reply_to': '<abc@ex.com>',
+        }
+        h_reply, c_reply = get_history_paths(reply_headers, config)
+        assert h_reply == h_orig
+        assert c_reply.name == h_orig.name.replace('.txt', '-compact.txt')
+
+    def test_changed_subject_reply_finds_existing_file(self, tmp_path):
+        """A reply with a completely different subject still matches by root_id."""
+        config = {'history_folder': str(tmp_path)}
+        original_headers = {'subject': 'Original Topic', 'message_id': '<root@ex.com>'}
+        h_orig, _ = get_history_paths(original_headers, config)
+        h_orig.parent.mkdir(parents=True, exist_ok=True)
+        h_orig.write_text('User:\nfirst\n\nAssistant:\nreply')
+
+        reply_headers = {
+            'subject': 'Totally Different Subject',
+            'message_id': '<reply@ex.com>',
+            'references': '<root@ex.com>',
+        }
+        h_reply, _ = get_history_paths(reply_headers, config)
+        assert h_reply == h_orig
+
 
 class TestGetRecentHistory:
     def test_missing_file_returns_empty(self, tmp_path):

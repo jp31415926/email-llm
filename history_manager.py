@@ -25,15 +25,29 @@ def get_history_paths(headers: dict, config: dict) -> Tuple[Path, Path]:
     """Get paths for the history and compact files for a thread.
 
     Filename: {sanitized_subject}__{sanitized_root_id}.txt
+
+    If a history file already exists for this root_id (regardless of subject),
+    that file is returned so replies with changed subjects still continue the
+    same thread.
     """
+    root_id = get_thread_root_id(headers)
+    root_id_sanitized = re.sub(r'\W+', '_', root_id).strip('_')
+
+    history_folder = Path(config.get('history_folder', 'history'))
+
+    # Search for an existing history file matching this root_id suffix
+    suffix = f"__{root_id_sanitized}.txt"
+    if history_folder.exists():
+        for existing in history_folder.iterdir():
+            if existing.name.endswith(suffix):
+                base_name = existing.name[:-len('.txt')]
+                compact_path = history_folder / f"{base_name}-compact.txt"
+                return existing, compact_path
+
     subject = headers.get('subject', '').lower()
     subject = re.sub(r'\W+', '_', subject).strip('_')[:50]
 
-    root_id = get_thread_root_id(headers)
-    root_id = re.sub(r'\W+', '_', root_id).strip('_')
-
-    history_folder = Path(config.get('history_folder', 'history'))
-    base_name = f"{subject}__{root_id}"
+    base_name = f"{subject}__{root_id_sanitized}"
     history_path = history_folder / f"{base_name}.txt"
     compact_path = history_folder / f"{base_name}-compact.txt"
     return history_path, compact_path
