@@ -97,7 +97,7 @@ class TestComposeReplyMsg:
         assert msg['Subject'] == 'Re: Hello', f"Subject should be 'Re: Hello', got '{msg['Subject']}'"
 
     def test_body_format_correct(self):
-        """Test that body has correct format with AI reply and original quoted."""
+        """Test that body is the LLM reply text only (no quoted history)."""
         original_headers = {
             'from': 'john@example.com',
             'subject': 'Hello',
@@ -117,10 +117,10 @@ class TestComposeReplyMsg:
         text_part = payload[0] if payload else None
         body_str = text_part.get_payload(decode=True).decode('utf-8') if text_part else ''
 
-        # Check that chat history and AI reply are present
-        assert 'Original body content' in body_str
-        assert 'Assistant:' in body_str
+        # Body should be reply_text only — no original body, no "Assistant:" prefix
         assert 'Hello! I can help.' in body_str
+        assert 'Original body content' not in body_str
+        assert 'Assistant:' not in body_str
 
     def test_date_fallback(self):
         """Test that missing Date header falls back to current time."""
@@ -147,8 +147,8 @@ class TestComposeReplyMsg:
         except (TypeError, ValueError) as e:
             pytest.fail(f"Date header is not valid: {msg['Date']}: {e}")
 
-    def test_original_body_preserved(self):
-        """Test that original body is preserved without modification."""
+    def test_original_body_not_in_reply(self):
+        """Test that original body is NOT included in the reply (history is in files)."""
         original_headers = {
             'from': 'john@example.com',
             'subject': 'Hello',
@@ -168,8 +168,9 @@ class TestComposeReplyMsg:
         text_part = payload[0] if payload else None
         body = text_part.get_payload(decode=True).decode('utf-8') if text_part else ''
 
-        # Check that original body is preserved exactly
-        assert 'Line 1\nLine 2\nLine 3' in body
+        # Original body should NOT be in reply — history is managed separately
+        assert 'Line 1' not in body
+        assert 'AI reply' in body
 
     def test_to_header_set_correctly(self):
         """Test that To header is set to original sender."""
@@ -281,7 +282,6 @@ class TestComposeReplyMsg:
         text_part = payload[0] if payload else None
         body = text_part.get_payload(decode=True).decode('utf-8') if text_part else ''
 
-        assert 'Assistant:' in body
         assert 'AI reply' in body
 
 class TestSendEmail:

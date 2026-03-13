@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reformats email reply bodies into chronological chat format.
+"""Extracts the latest user message from an email body.
 
 When a user replies to a bot email, the body looks like:
 
@@ -9,15 +9,10 @@ When a user replies to a bot email, the body looks like:
 
     > Previous conversation content...
 
-This module detects the 'On ... wrote:' separator, strips quote characters,
-reflows the quoted text, and reassembles it in oldest-first (chat) order:
-
-    Previous conversation content...
-
-    User's new reply text...
+This module detects the 'On ... wrote:' separator and returns only
+the text before it (the user's latest message).
 """
 
-import re
 from typing import Optional
 
 
@@ -48,38 +43,15 @@ def _find_separator(lines: list[str]) -> Optional[tuple[int, int]]:
     return None
 
 
-def _strip_quotes(lines: list[str]) -> list[str]:
-    """Remove leading '>' quote characters from each line."""
-    return [re.sub(r'^(>\s?)+', '', line) for line in lines]
+def extract_latest_user_message(body: str) -> str:
+    """Extract only the latest user message from an email body.
 
-
-def reformat_reply_body(body: str) -> str:
-    """Reformat an email reply body into chronological chat format.
-
-    Detects the 'On ... wrote:' separator. If found:
-    - Splits into user_reply (before separator) and quoted_body (after)
-    - Strips '>' quote characters from quoted_body
-    - Reflows quoted_body to join wrapped lines into paragraphs
-    - Returns quoted_body followed by user_reply (oldest message first)
-
-    Returns body unchanged if no separator is found.
+    If the body contains an 'On ... wrote:' separator, returns only the text
+    before it (the user's new reply). Otherwise returns the full body stripped.
     """
     lines = body.split('\n')
     sep = _find_separator(lines)
     if sep is None:
-        return body
-
-    sep_start, sep_end = sep
-
-    user_reply_lines = lines[:sep_start]
-    quoted_lines = lines[sep_end:]
-
-    # Strip quote characters from the quoted section
-    quoted_lines = _strip_quotes(quoted_lines)
-
-    user_reply = '\n'.join(user_reply_lines).strip()
-    quoted_body = '\n'.join(quoted_lines).strip()
-
-    if user_reply:
-        return f"{quoted_body}\n\nUser:\n{user_reply}"
-    return quoted_body
+        return body.strip()
+    sep_start, _ = sep
+    return '\n'.join(lines[:sep_start]).strip()

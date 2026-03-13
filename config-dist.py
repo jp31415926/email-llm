@@ -42,6 +42,10 @@ config = {
     'llamacpp_n_predict': 1024,
     'llamacpp_timeout': 600,
 
+    'history_folder': 'history',
+    'history_compact_threshold_chars': 40000,
+    'history_max_prompt_chars': 60000,
+
     'allowed_attachment_extensions': ['.txt', '.md', '.eml'],
     'smtp_host': 'smtp.example.com',
     'smtp_port': 25,

@@ -13,6 +13,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 from main import process_email, main
+from reply_formatter import extract_latest_user_message
 from smtp_sender import UnsupportedAttachmentError as SMTPUnsupportedAttachmentError
 from attachment_validator import UnsupportedAttachmentError as ValidatorUnsupportedAttachmentError
 from email_parser import parse_email
@@ -55,9 +56,13 @@ This is the email body content.
     def config(self, temp_dirs):
         """Create sample config."""
         source_dir, processed_dir = temp_dirs
+        history_dir = Path(str(source_dir)).parent / 'history'
         return {
             'source_folder': str(source_dir),
             'processed_folder': str(processed_dir),
+            'history_folder': str(history_dir),
+            'history_compact_threshold_chars': 40000,
+            'history_max_prompt_chars': 60000,
             'polling_interval_seconds': 1,
             'bot_name': 'Test Bot',
             'bot_email': 'bot@example.com',
@@ -162,8 +167,8 @@ malware content
 
     @patch('main.send_email')
     @patch('main.call_ollama')
-    def test_reply_body_reformatted(self, mock_call_ollama, mock_send_email, temp_dirs, config):
-        """Test that reply emails are reformatted into chronological chat order."""
+    def test_latest_user_message_extracted(self, mock_call_ollama, mock_send_email, temp_dirs, config):
+        """Test that only the latest user message is extracted and sent to the LLM."""
         source_dir, _ = temp_dirs
         mock_call_ollama.return_value = "Bot response"
         mock_send_email.return_value = None
@@ -174,6 +179,7 @@ From: sender@example.com
 To: bot@example.com
 Subject: Re: Test
 Message-Id: <reply123@example.com>
+References: <root123@example.com>
 
 User's new reply here.
 
@@ -184,13 +190,14 @@ On Wed, 15 May 2024, 09:00 <bot@example.com> wrote:
         eml_path = source_dir / "reply.eml"
         eml_path.write_text(eml_content)
 
-        headers = process_email(eml_path, config)
+        process_email(eml_path, config)
 
-        reformatted = headers['body']
-        # Quoted content should come first, user reply at the end
-        assert reformatted.index('Previous bot message.') < reformatted.index("User:\nUser's new reply here.")
-        # No '>' characters should remain
-        assert '>' not in reformatted
+        # The LLM should have been called with a prompt containing
+        # the user's new message but NOT the quoted old content
+        call_args = mock_call_ollama.call_args
+        prompt_sent = call_args[0][0]
+        assert "User's new reply here." in prompt_sent
+        assert "Previous bot message." not in prompt_sent
 
 
 class TestMain:
@@ -210,9 +217,13 @@ class TestMain:
     def config(self, temp_dirs):
         """Create sample config."""
         source_dir, processed_dir = temp_dirs
+        history_dir = Path(str(source_dir)).parent / 'history'
         return {
             'source_folder': str(source_dir),
             'processed_folder': str(processed_dir),
+            'history_folder': str(history_dir),
+            'history_compact_threshold_chars': 40000,
+            'history_max_prompt_chars': 60000,
             'polling_interval_seconds': 0.1,  # Very short for testing
             'bot_name': 'Test Bot',
             'bot_email': 'bot@example.com',

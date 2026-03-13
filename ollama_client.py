@@ -33,6 +33,11 @@ def call_ollama(prompt: str, config: dict) -> str:
     api_url = config.get('ollama_api_url', '')
     model = config.get('ollama_model', '')
     temperature = config.get('ollama_temperature', 0.7)
+    num_ctx = config.get('ollama_num_ctx', 65536)
+    repeat_penalty = config.get('ollama_repeat_penalty', 1.1)
+    top_k = config.get('ollama_top_k', 40)
+    top_p = config.get('ollama_top_p', 0.9)
+    min_p = config.get('ollama_min_p', 0.0)
     timeout = config.get('ollama_timeout', 600)
 
     logging.info(f"Calling Ollama API at {api_url}")
@@ -45,13 +50,11 @@ def call_ollama(prompt: str, config: dict) -> str:
                 'prompt': prompt,
                 'options': {
                         'temperature': temperature,
-                        'num_ctx': 65536,
-                        'repeat_penalty': 1.1,
-                        'top_k': 40,
-                        'top_p': 0.9,
-                        'min_p': 0.0,
-                        'repeat_last_n': 64,
-                        'repeat_penalty': 1.1
+                        'num_ctx': num_ctx,
+                        'repeat_penalty': repeat_penalty,
+                        'top_k': top_k,
+                        'top_p': top_p,
+                        'min_p': min_p,
                     },
                 'think': False,
                 'stream': False,

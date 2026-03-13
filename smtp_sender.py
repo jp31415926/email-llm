@@ -33,7 +33,7 @@ def generate_message_id(original_headers: dict, error_msg: str, config: dict) ->
 
 
 def compose_reply_msg(original_headers: dict, reply_text: str, config: dict) -> MIMEMultipart:
-    """Compose reply message with original email quoted.
+    """Compose reply message with LLM reply as body.
 
     Args:
         original_headers: Dictionary with original email headers:
@@ -43,7 +43,6 @@ def compose_reply_msg(original_headers: dict, reply_text: str, config: dict) -> 
             - message_id: Original message ID
             - references: Original references
             - in_reply_to: In-reply-to header
-            - body: Original email body
         reply_text: AI-generated reply text.
         config: Configuration dictionary with bot_email and other settings.
 
@@ -56,8 +55,6 @@ def compose_reply_msg(original_headers: dict, reply_text: str, config: dict) -> 
     original_subject = original_headers.get('subject', '')
     original_message_id = original_headers.get('message_id', '')
     original_references = original_headers.get('references', '')
-    #unused original_in_reply_to = original_headers.get('in_reply_to', '')
-    original_body = original_headers.get('body', '')
 
     # Get bot email from config
     bot_email = config.get('bot_email', 'bot@example.com')
@@ -79,21 +76,8 @@ def compose_reply_msg(original_headers: dict, reply_text: str, config: dict) -> 
     else:
         formatted_date = utils.formatdate()
 
-    # Build the message body
-    from_header = original_from
-    if from_header:
-        # Use parseaddr to extract email for display if there's a display name
-        name, addr = utils.parseaddr(from_header)
-        if name and name != addr:
-            from_header = f"{name} <{addr}>"
-        else:
-            from_header = addr
-
-    body = f"""{original_body}
-
-Assistant:
-{reply_text}
-"""
+    # Reply body is just the LLM response
+    body = reply_text
 
     # Create the multipart message
     msg = MIMEMultipart()
@@ -122,6 +106,46 @@ Assistant:
     # Add body as plain text part
     msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
+    return msg
+
+
+def compose_compact_notification_msg(original_headers: dict, compact_summary: str, config: dict) -> MIMEMultipart:
+    """Compose a compaction notification email.
+
+    Args:
+        original_headers: Original email headers (for threading).
+        compact_summary: The new compact summary text.
+        config: Configuration dictionary.
+
+    Returns:
+        MIMEMultipart message object ready to send.
+    """
+    original_from = original_headers.get('from', '')
+    original_cc = original_headers.get('cc', '')
+    original_message_id = original_headers.get('message_id', '')
+    original_references = original_headers.get('references', '')
+    bot_email = config.get('bot_email', 'bot@example.com')
+
+    msg = MIMEMultipart()
+    msg['To'] = original_from
+    if original_cc:
+        msg['Cc'] = original_cc
+    msg['From'] = bot_email
+    msg['Subject'] = 'Conversation compacted'
+    msg['Date'] = utils.formatdate()
+    msg['Message-Id'] = generate_message_id(original_headers, '', config)
+
+    if original_message_id:
+        msg['In-Reply-To'] = original_message_id
+
+    references_list = []
+    if original_references:
+        references_list.append(original_references)
+    if original_message_id:
+        references_list.append(original_message_id)
+    msg['References'] = ' '.join(references_list)
+
+    msg.attach(MIMEText(compact_summary, 'plain', 'utf-8'))
     return msg
 
 
@@ -164,7 +188,7 @@ def send_email(msg: MIMEMultipart, config: dict) -> None:
             msg_str = msg.as_string()
             to_addrs = msg.get('To', '')
             from_addr = msg.get('From', '')
-            
+
             # Get CC addresses if they exist
             cc_addrs = []
             cc_header = msg.get('Cc', '')
@@ -179,7 +203,7 @@ def send_email(msg: MIMEMultipart, config: dict) -> None:
                 all_recipients = [to_addrs] + cc_addrs
             else:
                 all_recipients = cc_addrs
-            
+
             logging.info(f"Sending email to {to_addrs} and CC: {cc_addrs}")
             server.sendmail(from_addr, all_recipients, msg_str)
 
